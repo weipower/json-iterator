@@ -331,6 +331,15 @@ func _getTypeEncoderFromExtension(ctx *ctx, typ reflect2.Type) ValEncoder {
 	return nil
 }
 
+// add by peter. It will slower the json
+type TBeforeDescribeStruct interface {
+	Check(string, string) bool
+}
+
+var BeforeDescribeStruct TBeforeDescribeStruct
+
+// add by peter. It will slower the json
+
 func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 	structType := typ.(*reflect2.UnsafeStructType)
 	embeddedBindings := []*Binding{}
@@ -338,6 +347,15 @@ func describeStruct(ctx *ctx, typ reflect2.Type) *StructDescriptor {
 	for i := 0; i < structType.NumField(); i++ {
 		field := structType.Field(i)
 		tag, hastag := field.Tag().Lookup(ctx.getTagKey())
+
+		// add by peter. It will slower the json
+		if BeforeDescribeStruct != nil {
+			if BeforeDescribeStruct.Check(string(field.Tag()), string(field.Name())) {
+				continue
+			}
+		}
+		// add by peter. It will slower the json
+
 		if ctx.onlyTaggedField && !hastag && !field.Anonymous() {
 			continue
 		}

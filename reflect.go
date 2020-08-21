@@ -91,6 +91,13 @@ func (stream *Stream) WriteVal(val interface{}) {
 	}
 	cacheKey := reflect2.RTypeOf(val)
 	encoder := stream.cfg.getEncoderFromCache(cacheKey)
+
+	//add by peter
+	if BeforeDescribeStruct != nil {
+		encoder = nil
+	}
+	//add by peter
+
 	if encoder == nil {
 		typ := reflect2.TypeOf(val)
 		encoder = stream.cfg.EncoderOf(typ)
@@ -190,9 +197,13 @@ func _createDecoderOfType(ctx *ctx, typ reflect2.Type) ValDecoder {
 func (cfg *frozenConfig) EncoderOf(typ reflect2.Type) ValEncoder {
 	cacheKey := typ.RType()
 	encoder := cfg.getEncoderFromCache(cacheKey)
-	if encoder != nil {
-		return encoder
+	//modity by peter. It will slower the json
+	if BeforeDescribeStruct == nil {
+		if encoder != nil {
+			return encoder
+		}
 	}
+	//modity by peter. It will slower the json
 	ctx := &ctx{
 		frozenConfig: cfg,
 		prefix:       "",
